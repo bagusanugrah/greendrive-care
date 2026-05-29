@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: greendrive-config
+data:
+  DB_CONNECTION: mysql
+  # Ganti dengan Endpoint dari halaman AWS RDS milikmu (tanpa http://)
+  DB_HOST: "greendrive-db.cfkai0w4u3sv.ap-southeast-2.rds.amazonaws.com" 
+  DB_PORT: "3306"
+  DB_DATABASE: "greendrive-db"
+  DB_USERNAME: "root"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: greendrive-secret
+type: Opaque
+data:
+  # Ganti dengan teks acak hasil perintah echo base64 di langkah 1 tadi
+  DB_PASSWORD: "cm9vdDEyMzQ=" 
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: greendrive-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: greendrive
+  template:
+    metadata:
+      labels:
+        app: greendrive
+    spec:
+      containers:
+      - name: laravel-app
+        # Ini adalah alamat image ECR kamu yang tadi berhasil di-push
+        image: 201158793798.dkr.ecr.ap-southeast-2.amazonaws.com/greendrive-care:latest
+        # Trik untuk demo: Kita jalankan built-in server Laravel agar langsung bisa diakses
+        command: ["/bin/sh", "-c", "php artisan config:cache && php artisan serve --host=0.0.0.0 --port=8000"]
+        ports:
+        - containerPort: 8000
+        resources:
+          requests:
+            cpu: "100m" # Syarat wajib HPA
+          limits:
+            cpu: "250m"
+        envFrom:
+        - configMapRef:
+            name: greendrive-config
+        - secretRef:
+            name: greendrive-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: greendrive-service
+spec:
+  type: LoadBalancer # Memberikan IP Publik otomatis dari AWS
+  ports:
+  - port: 80
+    targetPort: 8000
+  selector:
+    app: greendrive
