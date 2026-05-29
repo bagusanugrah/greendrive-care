@@ -6,6 +6,7 @@ use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Admin\SparepartController as AdminSparepartController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -29,9 +30,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+
 // Route Khusus Admin (Akses RBAC)
 Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
+    // Master Data Spareparts
+    Route::get('/spareparts', [AdminSparepartController::class, 'index'])->name('spareparts.index');
+    Route::post('/spareparts', [AdminSparepartController::class, 'store'])->name('spareparts.store');
+    Route::delete('/spareparts/{sparepart}', [AdminSparepartController::class, 'destroy'])->name('spareparts.destroy');
 });
 
 require __DIR__.'/auth.php';

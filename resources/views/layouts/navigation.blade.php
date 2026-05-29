@@ -23,6 +23,11 @@
                     <x-nav-link :href="route('map.index')" :active="request()->routeIs('map.index')">
                         {{ __('Peta Daur Ulang') }}
                     </x-nav-link>
+                    @if (Auth::user()->role === 'admin')
+                        <x-nav-link :href="route('admin.spareparts.index')" :active="request()->routeIs('admin.spareparts.*')" class="text-green-700 font-bold">
+                            {{ __('Panel Admin: Sparepart') }}
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
